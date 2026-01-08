@@ -1,14 +1,13 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from graph import graph_app
 
 app = FastAPI(
     title="Student AI Backend",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    docs_url="/docs"
 )
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,6 +25,13 @@ def root():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    return {
-        "reply": f"AI response received: {request.message}"
-    }
+    result = graph_app.invoke({"message": request.message})
+
+    # FORCE string output
+    if isinstance(result, dict):
+        reply = result.get("reply") or str(result)
+    else:
+        reply = str(result)
+
+    return {"reply": reply}
+
