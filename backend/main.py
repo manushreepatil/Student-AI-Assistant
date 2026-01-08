@@ -1,14 +1,20 @@
+from supabase import create_client
+import os
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from graph import graph_app
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_KEY")
+)
 
-# ✅ CORS (must be right after app creation)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,5 +25,12 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    result = graph_app.invoke({"message": request.message})
-    return {"reply": result["reply"]}
+    reply = graph_app.invoke({"message": request.message})
+
+    # Save to Supabase
+    supabase.table("chat_logs").insert({
+        "user_message": request.message,
+        "ai_reply": reply
+    }).execute()
+
+    return {"reply": reply}
