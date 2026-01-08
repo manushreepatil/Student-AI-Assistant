@@ -7,35 +7,41 @@ function App() {
     { role: "assistant", content: "Hi 👋 I’m your Student AI Assistant. How can I help you today?" }
   ]);
   const [loading, setLoading] = useState(false);
+const handleSend = async (text) => {
+  if (!text.trim()) return;
 
-  const handleSend = async (text) => {
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-    setLoading(true);
-    try {
-    const res = await fetch("http://127.0.0.1:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: text }),
-    });
+  setMessages((prev) => [...prev, { role: "user", content: text }]);
+  setLoading(true);
+
+  try {
+    const res = await fetch(
+      "https://student-ai-backend-sx69.onrender.com/chat",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: text }),
+      }
+    );
 
     const data = await res.json();
 
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: data.reply },
+      { role: "assistant", content: typeof data.reply === "string" ? data.reply : JSON.stringify(data.reply, null, 2) },
     ]);
-  } catch (err) {
+  } catch (error) {
     setMessages((prev) => [
       ...prev,
-      { role: "assistant", content: "⚠️ Error connecting to AI backend." },
+      { role: "assistant", content: "⚠️ Backend connection failed" },
     ]);
   } finally {
     setLoading(false);
   }
-  };
+};
 
+  
   return (
     <div className="h-screen w-screen bg-zinc-900 text-zinc-100 flex">
       {/* Sidebar */}
