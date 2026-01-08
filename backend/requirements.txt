@@ -1,8 +1,11 @@
 fastapi
 uvicorn
-langchain
-langgraph
 python-dotenv
+
+langchain
+langchain-openai
+langgraph
+
 supabase
 postgrest
 httpx
